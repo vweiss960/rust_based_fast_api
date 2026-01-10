@@ -125,6 +125,8 @@ pub use auth::{AuthProvider, UserClaims};
 pub use db::{UserDatabase, UserRecord};
 pub use error::{AuthError, ConfigError, SecretsError};
 pub use providers::LocalAuthProvider;
+#[cfg(feature = "ldap")]
+pub use providers::{LdapAuthProvider, LdapConfig};
 pub use password::{hash_password, verify_password};
 pub use jwt::{JwtValidator, Token, TokenCache};
 pub use middleware::{extract_jwt_claims, MasterAuth, MasterCredentials};

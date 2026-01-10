@@ -38,7 +38,7 @@ argon2 = "0.5"
 sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio", "chrono", "uuid", "json"], optional = true }
 
 # LDAP (requires OpenSSL)
-# ldap3 = { version = "0.11", optional = true }
+ldap3 = { version = "0.11", optional = true }
 
 # Secrets management (requires OpenSSL)
 # keyring = { version = "2", optional = true }
@@ -82,7 +82,7 @@ default = ["sqlite", "cache"]
 sqlite = ["sqlx"]
 
 # Auth providers
-# ldap = ["ldap3"]  # Requires OpenSSL - add when available
+ldap = ["ldap3"]
 
 # Operational features
 cache = ["moka"]
