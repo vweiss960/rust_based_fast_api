@@ -112,11 +112,17 @@
 pub mod auth;
 pub mod db;
 pub mod error;
+pub mod password;
+
+// Providers
+pub mod providers;
 
 // Re-export commonly used types
 pub use auth::{AuthProvider, UserClaims};
 pub use db::{UserDatabase, UserRecord};
 pub use error::{AuthError, ConfigError, SecretsError};
+pub use providers::LocalAuthProvider;
+pub use password::{hash_password, verify_password};
 
 /// Prelude with commonly used imports.
 ///

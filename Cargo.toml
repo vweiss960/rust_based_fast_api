@@ -34,8 +34,8 @@ async-trait = "0.1"
 # Password hashing
 argon2 = "0.5"
 
-# Database (requires OpenSSL for tls)
-# sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio-native-tls"], optional = true }
+# Database
+sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio", "chrono", "uuid", "json"], optional = true }
 
 # LDAP (requires OpenSSL)
 # ldap3 = { version = "0.11", optional = true }
@@ -76,10 +76,10 @@ mockall_double = "0.3"
 tempfile = "3"
 
 [features]
-default = ["cache"]
+default = ["sqlite", "cache"]
 
 # Database support
-# sqlite = ["sqlx"]
+sqlite = ["sqlx"]
 
 # Auth providers
 # ldap = ["ldap3"]  # Requires OpenSSL - add when available
