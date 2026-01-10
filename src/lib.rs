@@ -123,6 +123,8 @@ pub mod providers;
 // Re-export commonly used types
 pub use auth::{AuthProvider, UserClaims};
 pub use db::{UserDatabase, UserRecord};
+#[cfg(feature = "sqlite")]
+pub use db::SqliteUserDb;
 pub use error::{AuthError, ConfigError, SecretsError};
 pub use providers::LocalAuthProvider;
 #[cfg(feature = "ldap")]
