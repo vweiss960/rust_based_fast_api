@@ -1,0 +1,96 @@
+[package]
+name = "poem_auth"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "Extensible authentication framework for Poem web framework"
+repository = "https://github.com/yourusername/poem_auth"
+homepage = "https://github.com/yourusername/poem_auth"
+documentation = "https://docs.rs/poem_auth"
+license = "MIT OR Apache-2.0"
+keywords = ["poem", "authentication", "auth", "jwt", "ldap"]
+categories = ["authentication", "web-frameworks"]
+
+[lib]
+name = "poem_auth"
+path = "src/lib.rs"
+
+[dependencies]
+# Web framework
+poem = { version = "3", features = ["tower"] }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# JWT and cryptography
+jsonwebtoken = "9"
+async-trait = "0.1"
+
+# Password hashing
+argon2 = "0.5"
+
+# Database (requires OpenSSL for tls)
+# sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio-native-tls"], optional = true }
+
+# LDAP (requires OpenSSL)
+# ldap3 = { version = "0.11", optional = true }
+
+# Secrets management (requires OpenSSL)
+# keyring = { version = "2", optional = true }
+
+# Caching
+moka = { version = "0.12", features = ["future"], optional = true }
+
+# Rate limiting
+governor = { version = "0.6", optional = true }
+
+# CORS
+tower-http = { version = "0.5", features = ["cors", "trace"], optional = true }
+
+# Error handling
+thiserror = "1"
+anyhow = "1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+hex = "0.4"
+rand = "0.8"
+
+# CLI (for examples and testing)
+clap = { version = "4", features = ["derive"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+mockall = "0.12"
+mockall_double = "0.3"
+tempfile = "3"
+
+[features]
+default = ["cache"]
+
+# Database support
+# sqlite = ["sqlx"]
+
+# Auth providers
+# ldap = ["ldap3"]  # Requires OpenSSL - add when available
+
+# Operational features
+cache = ["moka"]
+rate-limit = ["governor"]
+cors = ["tower-http"]
+
+# CLI support
+cli = ["clap"]
+
+# All features for docs (when OpenSSL is available)
+# all = ["sqlite", "ldap", "keyring-support", "cache", "rate-limit", "cors"]
