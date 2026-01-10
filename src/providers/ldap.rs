@@ -161,7 +161,7 @@ impl AuthProvider for LdapAuthProvider {
         }
 
         // Format user DN
-        let user_dn = self.format_user_dn(username);
+        let _user_dn = self.format_user_dn(username);
 
         // In a real implementation, we would:
         // - Connect to LDAP
