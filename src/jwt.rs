@@ -3,6 +3,10 @@
 //! This module handles creating, signing, and validating JWT tokens.
 //! Tokens are signed with HS256 and include user claims.
 
+pub mod cache;
+
+pub use cache::TokenCache;
+
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 

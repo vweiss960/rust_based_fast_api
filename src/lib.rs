@@ -125,7 +125,7 @@ pub use db::{UserDatabase, UserRecord};
 pub use error::{AuthError, ConfigError, SecretsError};
 pub use providers::LocalAuthProvider;
 pub use password::{hash_password, verify_password};
-pub use jwt::{JwtValidator, Token};
+pub use jwt::{JwtValidator, Token, TokenCache};
 pub use middleware::extract_jwt_claims;
 
 /// Prelude with commonly used imports.
