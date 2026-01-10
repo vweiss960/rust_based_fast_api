@@ -113,6 +113,8 @@ pub mod auth;
 pub mod db;
 pub mod error;
 pub mod password;
+pub mod jwt;
+pub mod middleware;
 
 // Providers
 pub mod providers;
@@ -123,6 +125,8 @@ pub use db::{UserDatabase, UserRecord};
 pub use error::{AuthError, ConfigError, SecretsError};
 pub use providers::LocalAuthProvider;
 pub use password::{hash_password, verify_password};
+pub use jwt::{JwtValidator, Token};
+pub use middleware::extract_jwt_claims;
 
 /// Prelude with commonly used imports.
 ///
