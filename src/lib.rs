@@ -132,6 +132,8 @@ pub use providers::{LdapAuthProvider, LdapConfig};
 pub use password::{hash_password, verify_password};
 pub use jwt::{JwtValidator, Token, TokenCache};
 pub use middleware::{extract_jwt_claims, MasterAuth, MasterCredentials};
+#[cfg(feature = "rate-limit")]
+pub use middleware::{RateLimit, RateLimitConfig};
 pub use api::types::{LoginRequest, LoginResponse, CreateUserRequest, UpdatePasswordRequest, ErrorResponse, UserClaimsResponse};
 
 /// Prelude with commonly used imports.
