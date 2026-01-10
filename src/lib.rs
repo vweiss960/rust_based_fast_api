@@ -115,6 +115,7 @@ pub mod error;
 pub mod password;
 pub mod jwt;
 pub mod middleware;
+pub mod api;
 
 // Providers
 pub mod providers;
@@ -126,7 +127,8 @@ pub use error::{AuthError, ConfigError, SecretsError};
 pub use providers::LocalAuthProvider;
 pub use password::{hash_password, verify_password};
 pub use jwt::{JwtValidator, Token, TokenCache};
-pub use middleware::extract_jwt_claims;
+pub use middleware::{extract_jwt_claims, MasterAuth, MasterCredentials};
+pub use api::types::{LoginRequest, LoginResponse, CreateUserRequest, UpdatePasswordRequest, ErrorResponse, UserClaimsResponse};
 
 /// Prelude with commonly used imports.
 ///
