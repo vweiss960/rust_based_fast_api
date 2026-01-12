@@ -17,7 +17,27 @@ Provide easy-to-use authentication modules for poem-based API applications, incl
 - Ensure code is well-documented with inline rustdoc comments where needed
 
 ### Documentation Requirements
+
 - **Documentation updates are managed by the doc-guardian subagent**
+- Only create new documentation when explicitly requested
+- Use existing files instead of creating new ones
+- Ask before creating anything new
+- Ask before making major changes to existing documents that don't have to do with feature changes
+- Keep things concise and focused
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
+  **Ask the user before creating any new documents!!**
 - **Before committing**: The doc-guardian subagent reviews all changes and updates documentation only when necessary
 - **Consult doc-guardian**: When you have questions about how the codebase works or need to understand existing documentation
 - The doc-guardian prevents documentation bloat by only updating when changes affect public APIs or user-facing behavior
