@@ -1,0 +1,11 @@
+[package]
+name = "basic_auth"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+poem = { version = "3", features = ["tower"] }
+poem_auth = { path = "../..", features = ["sqlite"] }
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+chrono = "0.4"
