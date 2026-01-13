@@ -146,6 +146,10 @@ pub use config::AuthConfig;
 pub use quick_start::initialize_from_config;
 pub use poem_integration::{PoemAppState, AuthGuard, HasGroup, HasAnyGroup, HasAllGroups, And, Or, Not};
 
+// Procedural macros for authorization (Phase 2B)
+#[cfg(feature = "macros")]
+pub use poem_auth_macros::{require_group, require_any_groups, require_all_groups};
+
 /// Prelude with commonly used imports.
 ///
 /// # Example

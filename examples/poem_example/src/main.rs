@@ -6,6 +6,7 @@ use poem_auth::{
     initialize_from_config, PoemAppState, AuthProvider, UserClaims,
     api::types::LoginRequest,
     poem_integration::guards::{AuthGuard, HasGroup, HasAnyGroup},
+    require_group, require_any_groups, require_all_groups,
 };
 use serde_json::json;
 
@@ -111,6 +112,48 @@ async fn moderator_endpoint(claims: UserClaims) -> Response {
     }
 }
 
+/// Phase 2B: Admin endpoint using macro (zero boilerplate!)
+///
+/// This macro automatically checks group membership and returns 403 if denied.
+/// No manual guard instantiation needed!
+#[require_group("admins")]
+#[handler]
+async fn admin_macro(claims: UserClaims) -> Response {
+    (StatusCode::OK, Json(json!({
+        "message": "Admin access granted via macro!",
+        "username": claims.sub
+    }))).into_response()
+}
+
+/// Phase 2B: Moderator endpoint using macro with OR logic
+///
+/// The require_any_groups macro allows access if user has ANY of the groups.
+/// Automatically applies HasAnyGroup guard and returns 403 if all denied.
+#[require_any_groups("admins", "moderators")]
+#[handler]
+async fn moderator_macro(claims: UserClaims) -> Response {
+    (StatusCode::OK, Json(json!({
+        "message": "Moderator/Admin access granted via macro!",
+        "username": claims.sub,
+        "role": if claims.has_group("admins") { "admin" } else { "moderator" }
+    }))).into_response()
+}
+
+/// Phase 2B: Verified developer endpoint using macro with AND logic
+///
+/// The require_all_groups macro requires user to have ALL specified groups.
+/// Automatically applies HasAllGroups guard and returns 403 if any group missing.
+#[require_all_groups("developers", "verified")]
+#[handler]
+async fn verified_dev_macro(claims: UserClaims) -> Response {
+    (StatusCode::OK, Json(json!({
+        "message": "Verified developer area (macro-protected)!",
+        "username": claims.sub,
+        "developer": claims.has_group("developers"),
+        "verified": claims.has_group("verified")
+    }))).into_response()
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== poem + poem_auth Example ===\n");
@@ -126,7 +169,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .at("/login", post(login))
         .at("/protected", get(protected))
         .at("/admin", get(admin_endpoint))
-        .at("/moderator", get(moderator_endpoint));
+        .at("/moderator", get(moderator_endpoint))
+        // Phase 2B: Macro-based endpoints (zero boilerplate!)
+        .at("/admin/macro", get(admin_macro))
+        .at("/moderator/macro", get(moderator_macro))
+        .at("/dev/macro", get(verified_dev_macro));
 
     let addr = "0.0.0.0:3000";
     println!("🚀 Server running at http://{}\n", addr);
@@ -134,9 +181,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  GET  http://localhost:3000/                    - Health check");
     println!("  GET  http://localhost:3000/hello/:name         - Public greeting");
     println!("  POST http://localhost:3000/login               - Login to get token");
-    println!("  GET  http://localhost:3000/protected           - Protected endpoint (Phase 2: auto extraction)\n");
-    println!("  GET  http://localhost:3000/admin               - Admin-only endpoint (Phase 2: guard checks)\n");
-    println!("  GET  http://localhost:3000/moderator           - Moderator/Admin endpoint (Phase 2: OR guard)\n");
+    println!("  GET  http://localhost:3000/protected           - Protected endpoint (Phase 2: auto extraction)");
+    println!("  GET  http://localhost:3000/admin               - Admin-only endpoint (Phase 2: guard checks)");
+    println!("  GET  http://localhost:3000/moderator           - Moderator/Admin endpoint (Phase 2: OR guard)");
+    println!();
+    println!("  Phase 2B - Macro-based endpoints (zero boilerplate!):");
+    println!("  GET  http://localhost:3000/admin/macro         - Admin-only (macro: #[require_group])");
+    println!("  GET  http://localhost:3000/moderator/macro     - Moderator/Admin (macro: #[require_any_groups])");
+    println!("  GET  http://localhost:3000/dev/macro           - Verified developers (macro: #[require_all_groups])");
+    println!();
 
     println!("Example requests:");
     println!("  # Health check");

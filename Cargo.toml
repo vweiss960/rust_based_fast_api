@@ -16,6 +16,9 @@ name = "poem_auth"
 path = "src/lib.rs"
 
 [dependencies]
+# Procedural macros
+poem_auth_macros = { path = "./poem_auth_macros", optional = true }
+
 # Web framework
 poem = { version = "3", features = ["tower"] }
 
@@ -76,7 +79,10 @@ mockall_double = "0.3"
 tempfile = "3"
 
 [features]
-default = ["sqlite", "cache"]
+default = ["sqlite", "cache", "macros"]
+
+# Procedural macros for zero-boilerplate authorization
+macros = ["poem_auth_macros"]
 
 # Database support
 sqlite = ["sqlx"]
@@ -93,4 +99,4 @@ cors = ["tower-http"]
 cli = ["clap"]
 
 # All features for docs (when OpenSSL is available)
-# all = ["sqlite", "ldap", "keyring-support", "cache", "rate-limit", "cors"]
+# all = ["sqlite", "ldap", "keyring-support", "cache", "rate-limit", "cors", "macros"]

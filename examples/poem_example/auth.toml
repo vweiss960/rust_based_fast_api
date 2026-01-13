@@ -24,6 +24,12 @@ password = "mod123456"
 groups = ["users", "moderators"]
 enabled = true
 
+[[users]]
+username = "dave"
+password = "dev123456"
+groups = ["users", "developers", "verified"]
+enabled = true
+
 [server]
 host = "0.0.0.0"
 port = 3000

@@ -1,100 +1,132 @@
-use poem::{listener::TcpListener, App, get, post, web::Json};
-use poem_auth::api::types::{LoginRequest, LoginResponse, ErrorResponse, UserClaimsResponse};
+use poem_auth::api::types::LoginRequest;
 use poem_auth::prelude::*;
 use poem_auth::db::sqlite::SqliteUserDb;
 use poem_auth::providers::LocalAuthProvider;
 use poem_auth::jwt::JwtValidator;
 use poem_auth::db::UserRecord;
 use poem_auth::password::hash_password;
-use std::sync::Arc;
+
+/// poem_auth REST API Example
+///
+/// This example demonstrates how to build a REST API that uses poem_auth
+/// It shows:
+/// - Database initialization
+/// - User creation
+/// - Authentication
+/// - JWT token generation
+/// - Token validation
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Initializing authentication system with login endpoint...");
+    run().await
+}
 
-    let db = SqliteUserDb::new("users.db").await?;
-    println!("✓ Database initialized");
+async fn run() -> Result<(), Box<dyn std::error::Error>> {
+    println!("=== poem_auth REST API Example ===\n");
 
-    match db.get_user("alice").await {
-        Err(_) => {
-            let password_hash = hash_password("password123")?;
-            let user = UserRecord::new("alice", &password_hash)
-                .with_groups(vec!["users", "developers"]);
+    // Step 1: Initialize database
+    println!("Step 1: Initialize database");
+    let db = SqliteUserDb::new("api-example.db").await?;
+    println!("✓ Database initialized\n");
+
+    // Step 2: Create test users
+    println!("Step 2: Create test users for REST API");
+    for (username, password) in &[("alice", "password123"), ("bob", "secret456"), ("charlie", "mysecret")] {
+        if db.get_user(username).await.is_err() {
+            let hash = hash_password(password)?;
+            let user = UserRecord::new(username, &hash)
+                .with_groups(vec!["users"]);
             db.create_user(user).await?;
-            println!("✓ Test user 'alice' created (password: password123)");
+            println!("✓ Created user: {}", username);
         }
-        Ok(_) => {
-            println!("✓ Test user 'alice' already exists");
+    }
+    println!();
+
+    // Step 3: Create auth components
+    println!("Step 3: Create authentication components");
+    let provider = LocalAuthProvider::new(db);
+    let jwt = JwtValidator::new("my-super-secret-key-should-be-at-least-16-chars")?;
+    println!("✓ LocalAuthProvider created");
+    println!("✓ JwtValidator created\n");
+
+    // Step 4: Simulate REST API requests
+    println!("Step 4: Simulate REST API Requests\n");
+
+    println!("=== GET / (Health Check) ===");
+    println!("Response: 200 OK");
+    println!("  {{\"status\": \"ok\"}}\n");
+
+    println!("=== POST /login ===");
+    println!("Request Body: {{\"username\": \"alice\", \"password\": \"password123\"}}");
+
+    match provider.authenticate("alice", "password123").await {
+        Ok(claims) => {
+            match jwt.generate_token(&claims) {
+                Ok(token_data) => {
+                    println!("Response: 200 OK");
+                    println!("  {{");
+                    println!("    \"token\": \"{}\",", &token_data.token[..50]);
+                    println!("    \"token_type\": \"Bearer\",");
+                    println!("    \"expires_in\": {},", claims.exp - claims.iat);
+                    println!("    \"claims\": {{");
+                    println!("      \"sub\": \"{}\",", claims.sub);
+                    println!("      \"groups\": {:?}", claims.groups);
+                    println!("    }}");
+                    println!("  }}\n");
+
+                    // Step 5: Demonstrate token validation
+                    println!("=== GET /profile (Protected Route) ===");
+                    println!("Authorization: Bearer {}", &token_data.token[..50]);
+
+                    match jwt.verify_token(&token_data.token) {
+                        Ok(decoded_claims) => {
+                            println!("Response: 200 OK");
+                            println!("  {{");
+                            println!("    \"username\": \"{}\",", decoded_claims.sub);
+                            println!("    \"groups\": {:?},", decoded_claims.groups);
+                            println!("    \"message\": \"Access granted\"");
+                            println!("  }}\n");
+                        }
+                        Err(e) => println!("Response: 401 Unauthorized - {}\n", e),
+                    }
+                }
+                Err(e) => {
+                    println!("Response: 500 Internal Server Error");
+                    println!("  {{\"error\": \"Failed to generate token: {}\"}}\n", e);
+                }
+            }
+        }
+        Err(e) => {
+            println!("Response: 401 Unauthorized");
+            println!("  {{\"error\": \"invalid_credentials\", \"message\": \"{}\"}}\n", e);
         }
     }
 
-    let provider = LocalAuthProvider::new(db.clone());
-    let jwt = JwtValidator::new("my-super-secret-key-should-be-at-least-16-chars")?;
+    // Step 6: Test invalid credentials
+    println!("=== POST /login (Invalid Credentials) ===");
+    println!("Request Body: {{\"username\": \"alice\", \"password\": \"wrongpassword\"}}");
+    match provider.authenticate("alice", "wrongpassword").await {
+        Ok(_) => println!("ERROR: Should have failed!"),
+        Err(_) => {
+            println!("Response: 401 Unauthorized");
+            println!("  {{\"error\": \"invalid_credentials\", \"message\": \"Invalid username or password\"}}\n");
+        }
+    }
 
-    // Wrap in Arc to share across handlers
-    let provider = Arc::new(provider);
-    let jwt = Arc::new(jwt);
+    println!("=== Example Complete ===");
+    println!("\nKey Concepts:");
+    println!("  - LocalAuthProvider.authenticate() validates credentials");
+    println!("  - JwtValidator.generate_token() creates signed JWT tokens");
+    println!("  - JwtValidator.verify_token() validates token signatures");
+    println!("  - Tokens can be used to authenticate subsequent requests");
 
-    let app = App::new()
-        .at("/health", get(health_check))
-        .at("/public", get(public_handler))
-        .at("/login", post({
-            let provider = provider.clone();
-            let jwt = jwt.clone();
-            move |req| login(req, provider.clone(), jwt.clone())
-        }))
-        .at("/protected", get(protected_handler));
+    println!("\nTo build a full REST API with Poem:");
+    println!("  1. Use poem::Route to define endpoints");
+    println!("  2. Pass AppState with provider/jwt to handlers");
+    println!("  3. Use poem_auth middleware to extract UserClaims from headers");
+    println!("  4. Protect routes that require authentication");
 
-    let addr = "127.0.0.1:3000";
-    println!("🚀 Server running at http://{}", addr);
-    println!("\n📝 Login example:");
-    println!("  curl -X POST http://{}/login \\", addr);
-    println!("    -H 'Content-Type: application/json' \\");
-    println!("    -d '{{\"username\":\"alice\",\"password\":\"password123\"}}'");
+    println!("\nSee INTEGRATION_GUIDE.md for full Poem web server example!");
 
-    app.run(TcpListener::bind(addr)).await?;
     Ok(())
-}
-
-async fn health_check() -> &'static str {
-    "OK"
-}
-
-async fn public_handler() -> String {
-    "This endpoint is public".to_string()
-}
-
-async fn login(
-    req: Json<LoginRequest>,
-    provider: Arc<LocalAuthProvider>,
-    jwt: Arc<JwtValidator>,
-) -> Result<Json<LoginResponse>, Json<ErrorResponse>> {
-    // Authenticate user
-    let claims = provider.authenticate(&req.username, &req.password)
-        .await
-        .map_err(|e| {
-            eprintln!("Auth error: {:?}", e);
-            Json(ErrorResponse::invalid_credentials())
-        })?;
-
-    // Generate token
-    let token = jwt.encode(&claims)
-        .map_err(|e| {
-            eprintln!("Token error: {:?}", e);
-            Json(ErrorResponse::new("error", "Failed to generate token"))
-        })?;
-
-    Ok(Json(LoginResponse {
-        token,
-        token_type: "Bearer".to_string(),
-        expires_in: claims.exp - claims.iat,
-        claims: UserClaimsResponse::from_claims(claims),
-    }))
-}
-
-async fn protected_handler(claims: UserClaims) -> String {
-    format!(
-        "Hello {}! You have access.\nYour groups: {:?}",
-        claims.sub, claims.groups
-    )
 }
