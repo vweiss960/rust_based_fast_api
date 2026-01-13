@@ -1,0 +1,29 @@
+[database]
+path = "poem_example.db"
+auto_create = true
+
+[jwt]
+secret = "my-super-secret-key-should-be-at-least-16-chars"
+expiration_hours = 24
+
+[[users]]
+username = "alice"
+password = "password123"
+groups = ["users", "admins"]
+enabled = true
+
+[[users]]
+username = "bob"
+password = "secret456"
+groups = ["users"]
+enabled = true
+
+[[users]]
+username = "charlie"
+password = "mod123456"
+groups = ["users", "moderators"]
+enabled = true
+
+[server]
+host = "0.0.0.0"
+port = 3000

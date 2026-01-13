@@ -120,6 +120,11 @@ pub mod api;
 // Providers
 pub mod providers;
 
+// Configuration and integration
+pub mod config;
+pub mod quick_start;
+pub mod poem_integration;
+
 // Re-export commonly used types
 pub use auth::{AuthProvider, UserClaims};
 pub use db::{UserDatabase, UserRecord};
@@ -135,6 +140,11 @@ pub use middleware::{extract_jwt_claims, MasterAuth, MasterCredentials};
 #[cfg(feature = "rate-limit")]
 pub use middleware::{RateLimit, RateLimitConfig};
 pub use api::types::{LoginRequest, LoginResponse, CreateUserRequest, UpdatePasswordRequest, ErrorResponse, UserClaimsResponse};
+
+// Configuration and integration exports
+pub use config::AuthConfig;
+pub use quick_start::initialize_from_config;
+pub use poem_integration::{PoemAppState, AuthGuard, HasGroup, HasAnyGroup, HasAllGroups, And, Or, Not};
 
 /// Prelude with commonly used imports.
 ///
