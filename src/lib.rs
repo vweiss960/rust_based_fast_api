@@ -144,7 +144,7 @@ pub use api::types::{LoginRequest, LoginResponse, CreateUserRequest, UpdatePassw
 // Configuration and integration exports
 pub use config::AuthConfig;
 pub use quick_start::initialize_from_config;
-pub use poem_integration::{PoemAppState, AuthGuard, HasGroup, HasAnyGroup, HasAllGroups, And, Or, Not};
+pub use poem_integration::{PoemAppState, AuthGuard, HasGroup, HasAnyGroup, HasAllGroups, And, Or, Not, LoginResponseBuilder};
 
 // Procedural macros for authorization (Phase 2B)
 #[cfg(feature = "macros")]

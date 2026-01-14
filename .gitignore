@@ -27,3 +27,5 @@ target
 
 # Documentation (archived/expanded docs)
 docs/
+
+*.db

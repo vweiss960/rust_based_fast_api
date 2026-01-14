@@ -6,6 +6,7 @@ use poem_auth::{
     initialize_from_config, PoemAppState, AuthProvider, UserClaims,
     api::types::LoginRequest,
     poem_integration::guards::{AuthGuard, HasGroup, HasAnyGroup},
+    LoginResponseBuilder,
     require_group, require_any_groups, require_all_groups,
 };
 use serde_json::json;
@@ -23,35 +24,19 @@ fn health() -> String {
 }
 
 /// Login endpoint - returns JWT token or error response
+///
+/// Simplified using LoginResponseBuilder for minimal boilerplate.
 #[handler]
 async fn login(Json(req): Json<LoginRequest>) -> Response {
     let state = PoemAppState::get();
     match state.provider.authenticate(&req.username, &req.password).await {
         Ok(claims) => {
             match state.jwt.generate_token(&claims) {
-                Ok(token_data) => {
-                    (StatusCode::OK, Json(json!({
-                        "token": token_data.token,
-                        "token_type": "Bearer",
-                        "expires_in": claims.exp - claims.iat,
-                        "user": {
-                            "username": claims.sub,
-                            "groups": claims.groups
-                        }
-                    }))).into_response()
-                }
-                Err(_) => {
-                    (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({
-                        "error": "Failed to generate token"
-                    }))).into_response()
-                }
+                Ok(token_data) => LoginResponseBuilder::success(&claims, &token_data),
+                Err(_) => LoginResponseBuilder::token_generation_failed(),
             }
         }
-        Err(_) => {
-            (StatusCode::UNAUTHORIZED, Json(json!({
-                "error": "Invalid credentials"
-            }))).into_response()
-        }
+        Err(_) => LoginResponseBuilder::invalid_credentials(),
     }
 }
 
