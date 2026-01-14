@@ -55,6 +55,21 @@ pub struct UserConfig {
     pub enabled: bool,
 }
 
+/// TLS/HTTPS configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TlsConfig {
+    /// Enable TLS (default: false)
+    #[serde(default)]
+    pub enabled: bool,
+    /// Path to certificate file (PEM format)
+    pub certificate: String,
+    /// Path to private key file (PEM format)
+    pub key: String,
+    /// Optional path to CA certificate chain (PEM format)
+    #[serde(default)]
+    pub ca_chain: Option<String>,
+}
+
 /// Server configuration (optional)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
@@ -62,6 +77,9 @@ pub struct ServerConfig {
     pub host: String,
     /// Port to bind to (e.g., 3000)
     pub port: u16,
+    /// Optional TLS/HTTPS configuration
+    #[serde(default)]
+    pub tls: Option<TlsConfig>,
 }
 
 fn default_auto_create() -> bool {
@@ -127,6 +145,7 @@ impl AuthConfig {
     /// Checks:
     /// - JWT secret is at least 16 characters
     /// - Database path is not empty
+    /// - TLS certificate and key files exist (if TLS is enabled)
     ///
     /// # Errors
     ///
@@ -138,6 +157,29 @@ impl AuthConfig {
         if self.database.path.is_empty() {
             return Err("Database path cannot be empty".to_string());
         }
+
+        // Validate TLS config if present
+        if let Some(server) = &self.server {
+            if let Some(tls) = &server.tls {
+                if tls.enabled {
+                    // Check certificate file exists
+                    if !Path::new(&tls.certificate).exists() {
+                        return Err(format!("TLS certificate not found: {}", tls.certificate));
+                    }
+                    // Check key file exists
+                    if !Path::new(&tls.key).exists() {
+                        return Err(format!("TLS key not found: {}", tls.key));
+                    }
+                    // Check CA chain if specified
+                    if let Some(ca) = &tls.ca_chain {
+                        if !Path::new(ca).exists() {
+                            return Err(format!("TLS CA chain not found: {}", ca));
+                        }
+                    }
+                }
+            }
+        }
+
         Ok(())
     }
 

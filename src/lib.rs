@@ -142,7 +142,7 @@ pub use middleware::{RateLimit, RateLimitConfig};
 pub use api::types::{LoginRequest, LoginResponse, CreateUserRequest, UpdatePasswordRequest, ErrorResponse, UserClaimsResponse};
 
 // Configuration and integration exports
-pub use config::AuthConfig;
+pub use config::{AuthConfig, ServerConfig, TlsConfig};
 pub use quick_start::initialize_from_config;
 pub use poem_integration::{PoemAppState, AuthGuard, HasGroup, HasAnyGroup, HasAllGroups, And, Or, Not, LoginResponseBuilder};
 

@@ -33,3 +33,10 @@ enabled = true
 [server]
 host = "0.0.0.0"
 port = 3000
+
+# Uncomment to enable HTTPS/TLS encryption
+# [server.tls]
+# enabled = true
+# certificate = "certs/server.pem"
+# key = "certs/server-key.pem"
+# ca_chain = "certs/ca-chain.pem"  # optional

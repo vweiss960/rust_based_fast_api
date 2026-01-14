@@ -35,6 +35,8 @@ pub struct PoemAppState {
     pub provider: Arc<LocalAuthProvider>,
     /// JWT validator (generates and validates tokens)
     pub jwt: Arc<JwtValidator>,
+    /// Server configuration (host, port, optional TLS)
+    pub server_config: Option<crate::config::ServerConfig>,
 }
 
 static APP_STATE: OnceLock<PoemAppState> = OnceLock::new();
@@ -65,7 +67,7 @@ impl PoemAppState {
         let provider = Arc::new(LocalAuthProvider::new(db));
         let jwt = Arc::new(JwtValidator::new(jwt_secret)?);
 
-        Ok(PoemAppState { provider, jwt })
+        Ok(PoemAppState { provider, jwt, server_config: None })
     }
 
     /// Initialize the global app state (call once during startup)
@@ -126,5 +128,72 @@ impl PoemAppState {
     /// Get a clone of the JwtValidator for passing to handlers
     pub fn jwt(&self) -> Arc<JwtValidator> {
         self.jwt.clone()
+    }
+
+    /// Get server configuration (host, port) with defaults
+    pub fn server_config(&self) -> (String, u16) {
+        match &self.server_config {
+            Some(cfg) => (cfg.host.clone(), cfg.port),
+            None => ("0.0.0.0".to_string(), 3000),
+        }
+    }
+
+    /// Get TLS configuration if present
+    pub fn tls_config(&self) -> Option<&crate::config::TlsConfig> {
+        self.server_config.as_ref()?.tls.as_ref()
+    }
+
+    /// Check if TLS is enabled
+    pub fn tls_enabled(&self) -> bool {
+        self.tls_config()
+            .map(|tls| tls.enabled)
+            .unwrap_or(false)
+    }
+
+    /// Create a TcpListener bound to configured host:port
+    ///
+    /// Returns a TcpListener ready to use. If TLS is configured, the config is validated
+    /// at startup, but TLS setup must be done via Poem's listener methods or a reverse proxy.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// let state = PoemAppState::get();
+    /// let listener = state.create_listener()?;
+    /// Server::new(app).run(listener).await?;
+    /// ```
+    /// Get the listener address string
+    pub fn listener_addr(&self) -> String {
+        let (host, port) = self.server_config();
+        format!("{}:{}", host, port)
+    }
+
+    /// Validate TLS configuration if enabled
+    pub fn validate_listener_config(&self) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(tls) = self.tls_config() {
+            if tls.enabled {
+                self.validate_tls_files(tls)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Validate that TLS certificate and key files are readable
+    fn validate_tls_files(&self, tls: &crate::config::TlsConfig) -> Result<(), Box<dyn std::error::Error>> {
+        // Check that certificate file is readable
+        let _ = std::fs::read_to_string(&tls.certificate)
+            .map_err(|e| format!("Cannot read certificate file '{}': {}", tls.certificate, e))?;
+
+        // Check that key file is readable
+        let _ = std::fs::read_to_string(&tls.key)
+            .map_err(|e| format!("Cannot read key file '{}': {}", tls.key, e))?;
+
+        // Check CA chain if specified
+        if let Some(ca) = &tls.ca_chain {
+            let _ = std::fs::read_to_string(ca)
+                .map_err(|e| format!("Cannot read CA chain file '{}': {}", ca, e))?;
+        }
+
+        Ok(())
     }
 }

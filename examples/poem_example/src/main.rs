@@ -160,49 +160,56 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .at("/moderator/macro", get(moderator_macro))
         .at("/dev/macro", get(verified_dev_macro));
 
-    let addr = "0.0.0.0:3000";
-    println!("🚀 Server running at http://{}\n", addr);
+    // Get server configuration from global state
+    let state = PoemAppState::get();
+    state.validate_listener_config()?;
+
+    let addr = state.listener_addr();
+    let protocol = if state.tls_enabled() { "https" } else { "http" };
+
+    println!("Step 5: Starting server\n");
+    println!("🚀 Server running at {}://{}\n", protocol, addr);
     println!("Available endpoints:");
-    println!("  GET  http://localhost:3000/                    - Health check");
-    println!("  GET  http://localhost:3000/hello/:name         - Public greeting");
-    println!("  POST http://localhost:3000/login               - Login to get token");
-    println!("  GET  http://localhost:3000/protected           - Protected endpoint (Phase 2: auto extraction)");
-    println!("  GET  http://localhost:3000/admin               - Admin-only endpoint (Phase 2: guard checks)");
-    println!("  GET  http://localhost:3000/moderator           - Moderator/Admin endpoint (Phase 2: OR guard)");
+    println!("  GET  {}://{}/                    - Health check", protocol, addr);
+    println!("  GET  {}://{}/hello/:name         - Public greeting", protocol, addr);
+    println!("  POST {}://{}/login               - Login to get token", protocol, addr);
+    println!("  GET  {}://{}/protected           - Protected endpoint (Phase 2: auto extraction)", protocol, addr);
+    println!("  GET  {}://{}/admin               - Admin-only endpoint (Phase 2: guard checks)", protocol, addr);
+    println!("  GET  {}://{}/moderator           - Moderator/Admin endpoint (Phase 2: OR guard)", protocol, addr);
     println!();
     println!("  Phase 2B - Macro-based endpoints (zero boilerplate!):");
-    println!("  GET  http://localhost:3000/admin/macro         - Admin-only (macro: #[require_group])");
-    println!("  GET  http://localhost:3000/moderator/macro     - Moderator/Admin (macro: #[require_any_groups])");
-    println!("  GET  http://localhost:3000/dev/macro           - Verified developers (macro: #[require_all_groups])");
+    println!("  GET  {}://{}/admin/macro         - Admin-only (macro: #[require_group])", protocol, addr);
+    println!("  GET  {}://{}/moderator/macro     - Moderator/Admin (macro: #[require_any_groups])", protocol, addr);
+    println!("  GET  {}://{}/dev/macro           - Verified developers (macro: #[require_all_groups])", protocol, addr);
     println!();
 
     println!("Example requests:");
     println!("  # Health check");
-    println!("  curl http://localhost:3000/\n");
+    println!("  curl {}://{}/\n", protocol, addr);
 
     println!("  # Get greeting");
-    println!("  curl http://localhost:3000/hello/World\n");
+    println!("  curl {}://{}/hello/World\n", protocol, addr);
 
     println!("  # Login (alice has users + admins groups)");
-    println!("  curl -X POST http://localhost:3000/login \\");
+    println!("  curl -X POST {}://{}/login \\", protocol, addr);
     println!("    -H 'Content-Type: application/json' \\");
     println!("    -d '{{\"username\":\"alice\",\"password\":\"password123\"}}'\n");
 
     println!("  # Login (bob has only users group)");
-    println!("  curl -X POST http://localhost:3000/login \\");
+    println!("  curl -X POST {}://{}/login \\", protocol, addr);
     println!("    -H 'Content-Type: application/json' \\");
     println!("    -d '{{\"username\":\"bob\",\"password\":\"secret456\"}}'\n");
 
     println!("  # Access protected endpoint (replace TOKEN with token from login)");
-    println!("  curl -H 'Authorization: Bearer TOKEN' http://localhost:3000/protected\n");
+    println!("  curl -H 'Authorization: Bearer TOKEN' {}://{}/protected\n", protocol, addr);
 
     println!("  # Access admin endpoint (only works with admin token)");
-    println!("  curl -H 'Authorization: Bearer TOKEN' http://localhost:3000/admin\n");
+    println!("  curl -H 'Authorization: Bearer TOKEN' {}://{}/admin\n", protocol, addr);
 
     println!("  # Access moderator endpoint (works with admin or moderator token)");
-    println!("  curl -H 'Authorization: Bearer TOKEN' http://localhost:3000/moderator\n");
+    println!("  curl -H 'Authorization: Bearer TOKEN' {}://{}/moderator\n", protocol, addr);
 
-    let listener = TcpListener::bind(addr);
+    let listener = TcpListener::bind(&addr);
     Server::new(listener).run(app).await?;
 
     Ok(())

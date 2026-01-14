@@ -106,6 +106,7 @@ pub async fn initialize_from_config(
     let app_state = PoemAppState {
         provider,
         jwt,
+        server_config: config.server.clone(),
     };
     app_state.init().map_err(|_| {
         Box::new(std::io::Error::new(
@@ -127,10 +128,26 @@ pub async fn initialize_from_config(
     println!("  Users: {}", config.users.len());
 
     if let Some(server) = &config.server {
+        let protocol = if server.tls.as_ref().map(|t| t.enabled).unwrap_or(false) {
+            "https"
+        } else {
+            "http"
+        };
         println!(
-            "\nServer: http://{}:{}",
-            server.host, server.port
+            "\nServer: {}://{}:{}",
+            protocol, server.host, server.port
         );
+
+        if let Some(tls) = &server.tls {
+            if tls.enabled {
+                println!("  🔒 TLS: Enabled");
+                println!("      Certificate: {}", tls.certificate);
+                println!("      Key: {}", tls.key);
+                if let Some(ca) = &tls.ca_chain {
+                    println!("      CA Chain: {}", ca);
+                }
+            }
+        }
     }
     println!();
 
